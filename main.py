@@ -9,11 +9,11 @@ from model.plot import plot
 def federated_learning():
     # dataset
     print('Initialize Dataset...')
-    data_loader = loader('mnist')
-    # data_loader = loader('cifar10', batch_size=batch_size)
+    # data_loader = loader('mnist')
+    data_loader = loader('cifar10')
 
     # hyper parameter
-    size = 20
+    size = 100
     n_epoch_train = 10
     n_epoch_distillation = 100
 

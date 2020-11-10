@@ -50,6 +50,24 @@ class server(object):
         aggregate_soft_targets = sum_soft_targets / self.size
         return aggregate_soft_targets.split(128, dim=0)
 
+    @staticmethod
+    def target2label(soft_targets):
+        label = []
+        for target_batch in soft_targets:
+            for target in target_batch:
+                label.append(target.cpu().numpy().tolist().index(max(target)))
+        label_tensor = torch.tensor(label)
+        return label_tensor.cuda().split(128, dim=0)
+
+    def __verify(self, pseudo_label):
+        count = 0
+        for index, (_, target) in enumerate(self.trans_loader):
+            target = Variable(target).cuda()
+            for v1, v2 in zip(target, pseudo_label[index]):
+                if v1 == v2:
+                    count += 1
+        return count
+
     def _knowledge_distillation(self, soft_target, temperature):
         optimizer = optim.Adam(params=self.global_model.parameters(), lr=0.001)
         for i in range(self.n_epoch):
@@ -60,9 +78,11 @@ class server(object):
 
                 output = self.global_model(data)
 
-                output_student = torch.nn.functional.log_softmax(output / temperature, dim=1)
-                output_teacher = torch.nn.functional.softmax(soft_target[index] / temperature, dim=1)
-                loss = nn.KLDivLoss()(output_student, output_teacher) * temperature * temperature
+                # output_student = torch.nn.functional.log_softmax(output / temperature, dim=1)
+                # output_teacher = torch.nn.functional.softmax(soft_target[index] / temperature, dim=1)
+                # loss = nn.KLDivLoss()(output_student, output_teacher) * temperature * temperature
+
+                loss = torch.nn.CrossEntropyLoss()(output, soft_target[index])
 
                 loss.backward()
                 optimizer.step()
@@ -91,5 +111,12 @@ class server(object):
 
     def run(self):
         soft_target = self._aggregate_soft_target(self._load_soft_target())
-        self._knowledge_distillation(soft_target=soft_target, temperature=self.temperature)
+        label = self.target2label(soft_target)
+        correct = self.__verify(label)
+        print('[Pseudo Label Accuracy]  {:>.2f}% ({:>5}/{:>5})'.format(
+            correct/len(self.trans_loader.dataset),
+            correct,
+            len(self.trans_loader.dataset)
+        ))
+        self._knowledge_distillation(soft_target=label, temperature=self.temperature)
         self._save_global_model_state()

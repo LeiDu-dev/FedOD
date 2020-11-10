@@ -84,7 +84,7 @@ class client(object):
 
     def run(self):
         self.model = self._load_global_model_state()
-        optimizer = optim.SGD(params=self.model.parameters(), lr=0.01, momentum=0.5)
-        # optimizer = optim.Adam(params=self.model.parameters(), lr=0.001)
+        # optimizer = optim.SGD(params=self.model.parameters(), lr=0.01, momentum=0.5)
+        optimizer = optim.Adam(params=self.model.parameters(), lr=0.001)
         self._train(optimizer=optimizer)
         self._save_soft_target(self._predict())

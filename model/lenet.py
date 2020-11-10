@@ -8,8 +8,8 @@ class LeNet5(nn.Module, ABC):
         super(LeNet5, self).__init__()  # super用法:继承父类nn.Model的属性，并用父类的方法初始化这些属性
 
         self.conv1 = nn.Sequential(
-            nn.Conv2d(in_dim, 6, 5, 1, 2),  # out_dim=6, kernel_size=5, stride=1, padding=2
-            # nn.Conv2d(in_dim, 6, 5, 1, 0),
+            # nn.Conv2d(in_dim, 6, 5, 1, 2),  # out_dim=6, kernel_size=5, stride=1, padding=2
+            nn.Conv2d(in_dim, 6, 5, 1, 0),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2, 2)  # kernel_size=2, padding=2
         )
@@ -36,4 +36,4 @@ class LeNet5(nn.Module, ABC):
 def lenet5():
     """ return a LeNet 5 object
     """
-    return LeNet5(1, 10)
+    return LeNet5(3, 10)
